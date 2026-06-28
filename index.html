@@ -217,11 +217,22 @@
 </div>
 </div></div></div>
 <script>
+var AUTH_DAYS = 7; // remember password for this many days
+function unlock() {
+  document.getElementById('gate').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function isRemembered() {
+  try {
+    var exp = parseInt(localStorage.getItem('dmf_auth') || '0', 10);
+    return exp && Date.now() < exp;
+  } catch (e) { return false; }
+}
 function checkPw() {
   var v = document.getElementById('pw-input').value;
   if (v === '1944') {
-    document.getElementById('gate').style.display = 'none';
-    document.body.style.overflow = '';
+    try { localStorage.setItem('dmf_auth', String(Date.now() + AUTH_DAYS * 86400000)); } catch (e) {}
+    unlock();
   } else {
     document.getElementById('pw-err').textContent = 'Incorrect password, try again';
     document.getElementById('pw-input').value = '';
@@ -229,8 +240,12 @@ function checkPw() {
   }
 }
 document.addEventListener('DOMContentLoaded', function() {
-  document.body.style.overflow = 'hidden';
-  document.getElementById('pw-input').focus();
+  if (isRemembered()) {
+    unlock();
+  } else {
+    document.body.style.overflow = 'hidden';
+    document.getElementById('pw-input').focus();
+  }
   surfaceAthletes();
 });
 function surfaceAthletes() {
