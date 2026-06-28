@@ -101,6 +101,24 @@
 </style>
 </head>
 <body>
+<!-- PASSWORD GATE -->
+<div id="gate" style="position:fixed;inset:0;background:#111827;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:white;border-radius:14px;padding:36px 32px;text-align:center;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:32px;margin-bottom:10px;">&#x1F3C3;</div>
+    <div style="font-weight:800;font-size:17px;color:#111827;margin-bottom:4px;">Dutch Meet Finder</div>
+    <div style="color:#6b7280;font-size:12px;margin-bottom:22px;">Enter password to access</div>
+    <input id="pw-input" type="password" placeholder="Password" autocomplete="off"
+      style="width:100%;padding:11px;border:2px solid #e5e7eb;border-radius:8px;font-size:15px;text-align:center;outline:none;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')checkPw()"
+      onfocus="this.style.borderColor='#111827'" onblur="this.style.borderColor='#e5e7eb'">
+    <div id="pw-err" style="color:#ef4444;font-size:11px;margin-top:8px;min-height:16px;"></div>
+    <button onclick="checkPw()"
+      style="margin-top:10px;width:100%;background:#111827;color:white;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;">
+      Enter &rarr;
+    </button>
+  </div>
+</div>
+
 <div class="header">
   <div>
     <div class="header-title">&#x1F1F3;&#x1F1F1; Dutch Meet Finder 2026</div>
@@ -196,7 +214,23 @@
 </div>
 </div></div></div>
 <script>
-function toggle(row){const o=row.classList.contains('open');document.querySelectorAll('.meet-row.open').forEach(r=>r.classList.remove('open'));if(!o)row.classList.add('open');}
+functionfunction checkPw() {
+  const v = document.getElementById('pw-input').value;
+  if (v === '1944') {
+    document.getElementById('gate').style.display = 'none';
+    document.body.style.overflow = '';
+  } else {
+    document.getElementById('pw-err').textContent = 'Incorrect password — try again';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.body.style.overflow = 'hidden';
+  document.getElementById('pw-input').focus();
+});
+
+ toggle(row){const o=row.classList.contains('open');document.querySelectorAll('.meet-row.open').forEach(r=>r.classList.remove('open'));if(!o)row.classList.add('open');}
 function showTab(tab,btn){document.getElementById('tab-meets').style.display=tab==='meets'?'':'none';document.getElementById('tab-tracks').style.display=tab==='tracks'?'':'none';document.getElementById('tab-spikes').style.display=tab==='spikes'?'':'none';document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
 </script>
 </body>
