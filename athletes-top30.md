@@ -5,7 +5,7 @@ registrations via each athlete's upcoming-competitions list.
 
 - Profile + upcoming meets: `https://www.atletiek.nu/atleet/profiel/<ID>/#wedstrijden`
 - Rankings (source): [100m](https://www.atletiek.nu/ranglijst/nederlandse-ranglijst/2026/outdoor/senioren-mannen/100m/) · [200m](https://www.atletiek.nu/ranglijst/nederlandse-ranglijst/2026/outdoor/senioren-mannen/200m/)
-- "Events" = which top-30 list(s) they're in. Last resolved: 2026-06-28.
+- "Events" = which top-30 list(s) they're in. Last resolved: 2026-06-28 (rankings + registrations re-verified unchanged 2026-06-29).
 
 | Athlete | Club | Events | Profiel ID | Profile URL |
 |---|---|---|---|---|
