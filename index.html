@@ -63,7 +63,7 @@
   .athlete-names { font-size: 11px; color: #374151; }
   .athlete-names .an { font-weight: 600; }
   .meet-athletes { font-size: 11px; color: #1e3a5f; margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .ma-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; }
+  .ma-label { font-size: 12px; line-height: 1; }
   .note { background: #eff6ff; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #1e40af; margin-top: 10px; line-height: 1.6; }
   .note a { color: #1d4ed8; }
   .hint { font-size: 10px; color: #9ca3af; text-align: center; margin-top: 8px; }
@@ -256,7 +256,7 @@ function surfaceAthletes() {
       line.className = 'meet-athletes';
       var label = document.createElement('span');
       label.className = 'ma-label';
-      label.textContent = 'Following';
+      label.textContent = '🏃';
       line.appendChild(label);
       line.appendChild(names.cloneNode(true));
       info.appendChild(line);
