@@ -110,7 +110,16 @@
   .sort-lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:0.5px;margin-right:2px;}
   .sort-btn{font-size:11px;font-weight:700;padding:5px 11px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#6b7280;cursor:pointer;}
   .sort-btn.active{background:#111827;color:white;border-color:#111827;}
+  #map{height:520px;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+  .map-filter{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;}
+  .map-btn{font-size:11px;font-weight:700;padding:5px 11px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#6b7280;cursor:pointer;}
+  .map-btn.active{background:#111827;color:white;border-color:#111827;}
+  .map-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#6b7280;margin-top:8px;}
+  .map-legend span{display:inline-flex;align-items:center;gap:4px;}
+  .map-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div id="gate" style="position:fixed;inset:0;background:#111827;display:flex;align-items:center;justify-content:center;z-index:9999;">
@@ -141,6 +150,7 @@
   <button class="tab-btn active" onclick="showTab('meets',this)">&#x1F3DF;&#xFE0F; Meets</button>
   <button class="tab-btn" onclick="showTab('tracks',this)">&#x26A1; Tracks</button>
   <button class="tab-btn" onclick="showTab('spikes',this)">&#x1F45F; Spikes</button>
+  <button class="tab-btn" onclick="showTab('map',this)">&#x1F5FA;&#xFE0F; Map</button>
 </div>
 <div id="tab-meets"><div class="content"><div class="sort-bar"><span class="sort-lbl">Sort</span><button class="sort-btn active" onclick="sortMeets('date',this)">Date</button><button class="sort-btn" onclick="sortMeets('fast',this)">Fastest track</button><button class="sort-btn" onclick="sortMeets('pop',this)">Most popular</button></div><div class="meet-table">
 <div class="meet-row" data-fast="73.5" data-pop="801" data-order="0" onclick="toggle(this)"><div class="date-col"><div class="date-d">4</div><div class="date-m">Jul</div><div class="date-day">Sat</div></div><div class="info-col"><div class="name-row"><div class="meet-name">Meeting voor Mon &#x1F1E7;&#x1F1EA; (WACT Challenger)</div></div><div class="track-line"><span class="trk-stadium">&#x1F4CD;</span> <span class="track-name-meet"><b class="trk-city-meet">Leuven</b> &middot; ROBA Stadion</span><span class="tag ts-normal" title="Global track speed rank 20 of 38 (NL+BE+DE)">Normal · 73.5 · #20</span></div><div class="meet-meta">Sat 11:00 <span class="ev-pill ev-no">100m</span><span class="ev-pill ev-yes">200m</span><span class="ev-pill ev-no">400m</span><span class="tag tag-wact">WACT Challenger</span><span class="tag tag-urgent">Closes 30 Jun &#x26A1;</span></div></div><div class="right-col"><div class="cost">&euro;10</div><div class="stars">&#x2605;&#x2605;&#x2605;&#x2605;</div><a class="reg-btn" href="https://www.atletiek.nu/wedstrijd/main/44568/" target="_blank" onclick="event.stopPropagation()">Register &rarr;</a></div><div class="detail"><div class="detail-grid"><div><div class="dl">Level</div><div class="dv">WACT Challenger</div></div><div><div class="dl">Events</div><div class="dv">200m only</div><div class="ds">No 100m or 400m here</div></div><div><div class="dl">Track</div><div class="dv">Normal &mdash; ROBA Stadion</div></div></div><div class="athletes-row"><span class="athletes-label">NL top-30 confirmed</span><span class="athlete-names"><span class="an">Jaimie Omalla</span>, <span class="an">Onyema Adigida</span></span></div></div></div>
@@ -218,6 +228,14 @@
 <strong>Don't know the surface?</strong> &rarr; Ambition. It never actively hurts you. The SP3 on a bad track can.
 </div>
 </div></div></div>
+<div id="tab-map" style="display:none"><div class="content">
+<div class="map-filter"><span class="sort-lbl">Month</span>
+<button class="map-btn active" onclick="filterMapMonth('all',this)">All</button>
+<button class="map-btn" onclick="filterMapMonth('Jul',this)">July</button>
+<button class="map-btn" onclick="filterMapMonth('Aug',this)">August</button></div>
+<div id="map"></div>
+<div class="map-legend"><span><i class="map-dot" style="background:#10b981"></i>Fast track</span><span><i class="map-dot" style="background:#38bdf8"></i>Normal</span><span><i class="map-dot" style="background:#f59e0b"></i>Slow</span><span><i class="map-dot" style="background:#9ca3af"></i>Not ranked</span></div>
+</div></div>
 <script>
 var AUTH_DAYS = 7; // remember password for this many days
 function unlock() {
@@ -278,8 +296,10 @@ function showTab(tab, btn) {
   document.getElementById('tab-meets').style.display  = tab === 'meets'  ? '' : 'none';
   document.getElementById('tab-tracks').style.display = tab === 'tracks' ? '' : 'none';
   document.getElementById('tab-spikes').style.display = tab === 'spikes' ? '' : 'none';
+  document.getElementById('tab-map').style.display    = tab === 'map'    ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
+  if (tab === 'map') { initMap(); if (mapObj) setTimeout(function(){ mapObj.invalidateSize(); renderMarkers(); }, 60); }
 }
 function filterTrk(c,btn){
   document.querySelectorAll('.trk-fbtn').forEach(function(b){b.classList.remove('active');});
@@ -300,6 +320,60 @@ function sortMeets(mode,btn){
   });
   rows.forEach(function(r){tbl.appendChild(r);});
 }
+
+var MEETS=[
+{n:"Meeting voor Mon (WACT Challenger)",city:"Leuven, BE",d:"Sat 4 Jul",m:"Jul",lat:50.862,lng:4.675,sc:"73.5",rank:20,cls:"Normal",col:"#38bdf8",ath:["Jaimie Omalla","Onyema Adigida"],url:"https://www.atletiek.nu/wedstrijd/main/44568/"},
+{n:"SPAR Competitie 1e Divisie",city:"Nijmegen, NL",d:"Sun 5 Jul",m:"Jul",lat:51.823,lng:5.835,sc:"n/r",rank:0,cls:"Not ranked",col:"#9ca3af",ath:["Tom Esono Keukelaar","Jan Polman"],url:"https://www.atletiek.nu/wedstrijd/main/44243/"},
+{n:"Rijnmond Track Series",city:"Rotterdam, NL",d:"Thu 9 Jul",m:"Jul",lat:51.888,lng:4.523,sc:"71.5",rank:24,cls:"Normal",col:"#38bdf8",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/45059/"},
+{n:"PUMA Fast Arms Fast Legs",city:"Wetzlar, DE",d:"Fri 10 Jul",m:"Jul",lat:50.557,lng:8.498,sc:"n/r",rank:0,cls:"Not ranked",col:"#9ca3af",ath:[],url:"https://fast-arms-fast-legs.de"},
+{n:"Trackmeeting Breda",city:"Breda, NL",d:"Sat 11 Jul",m:"Jul",lat:51.585,lng:4.792,sc:"81",rank:9,cls:"Fast",col:"#10b981",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/43880/"},
+{n:"AtH Trackmeeting Eindhoven",city:"Eindhoven, NL",d:"Sat 11 Jul",m:"Jul",lat:51.451,lng:5.459,sc:"83",rank:7,cls:"Fast",col:"#10b981",ath:["Boy Lorist","Tijme de Groot"],url:"https://www.atletiek.nu/wedstrijd/main/43710/"},
+{n:"Guldensporenmeeting (WACT Bronze)",city:"Kortrijk, BE",d:"Sat 11 Jul",m:"Jul",lat:50.806,lng:3.247,sc:"80.5",rank:11,cls:"Fast",col:"#10b981",ath:["Xavi Joy Mo-Ajok","Jozuah Revierre","Quincy van 't Hoff","Manne Baan"],url:"https://www.atletiek.nu/wedstrijd/main/44647/"},
+{n:"Liliane Mandema Memorial",city:"Den Haag, NL",d:"Sun 12 Jul",m:"Jul",lat:52.052,lng:4.292,sc:"79",rank:14,cls:"Fast",col:"#10b981",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/43933/"},
+{n:"Meeting Int. Province Liege",city:"Liege, BE",d:"Wed 15 Jul",m:"Jul",lat:50.667,lng:5.545,sc:"61.5",rank:34,cls:"Slow",col:"#f59e0b",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/44854/"},
+{n:"Nacht van de Atletiek (WACT Bronze)",city:"Heusden-Zolder, BE",d:"Sat 18 Jul",m:"Jul",lat:50.995,lng:5.285,sc:"82.5",rank:8,cls:"Fast",col:"#10b981",ath:["Jozuah Revierre","Quincy van 't Hoff","Manne Baan"],url:"https://www.atletiek.nu/wedstrijd/main/44539/"},
+{n:"Memorial Cor Aalberts",city:"Eindhoven, NL",d:"Sat 18 Jul",m:"Jul",lat:51.463,lng:5.470,sc:"83",rank:7,cls:"Fast",col:"#10b981",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/43951/"},
+{n:"ASICS NK Atletiek (Dutch Nationals)",city:"Hengelo, NL",d:"Sat 25 Jul",m:"Jul",lat:52.248,lng:6.790,sc:"84.5",rank:6,cls:"Fast",col:"#10b981",ath:["Lorenzo Speear","Samir Cullimore","Nigel Grep"],url:"https://www.atletiek.nu/wedstrijd/main/45038/"},
+{n:"IFAM Outdoor (WACT Bronze)",city:"Oordegem, BE",d:"Sat 1 Aug",m:"Aug",lat:50.950,lng:3.900,sc:"85",rank:4,cls:"Fast",col:"#10b981",ath:[],url:"https://www.atletiek.nu/wedstrijd/main/44083/"}
+];
+var mapObj=null, markerLayer=null, mapMonth='all';
+function popupHtml(x){
+  var s='<div style="font-weight:700;font-size:13px;margin-bottom:2px">'+x.n+'</div>';
+  s+='<div style="font-size:11px;color:#6b7280">&#x1F4CD; '+x.city+' &middot; '+x.d+'</div>';
+  s+='<div style="font-size:11px;margin-top:3px"><b style="color:'+x.col+'">'+x.cls+'</b>';
+  if(x.sc!=='n/r'){ s+=' &middot; '+x.sc; if(x.rank){ s+=' &middot; #'+x.rank+' EU'; } }
+  s+='</div>';
+  if(x.ath.length){ s+='<div style="font-size:11px;margin-top:4px;border-top:1px solid #eee;padding-top:4px">&#x1F3C3; '+x.ath.join(', ')+'</div>'; }
+  s+='<div style="margin-top:5px"><a href="'+x.url+'" target="_blank" style="font-size:11px;color:#1d4ed8">View on atletiek.nu &#x2197;</a></div>';
+  return s;
+}
+function initMap(){
+  if(mapObj || typeof L==='undefined') return;
+  mapObj=L.map('map',{scrollWheelZoom:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(mapObj);
+  markerLayer=L.layerGroup().addTo(mapObj);
+  renderMarkers();
+}
+function renderMarkers(){
+  if(!mapObj) return;
+  markerLayer.clearLayers();
+  var pts=[];
+  MEETS.forEach(function(x){
+    if(mapMonth!=='all' && x.m!==mapMonth) return;
+    var mk=L.circleMarker([x.lat,x.lng],{radius:8,color:'#fff',weight:2,fillColor:x.col,fillOpacity:0.95});
+    mk.bindPopup(popupHtml(x));
+    markerLayer.addLayer(mk);
+    pts.push([x.lat,x.lng]);
+  });
+  if(pts.length) mapObj.fitBounds(pts,{padding:[45,45],maxZoom:9});
+}
+function filterMapMonth(m,btn){
+  mapMonth=m;
+  document.querySelectorAll('.map-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderMarkers();
+}
+
 </script>
 </body>
 </html>
